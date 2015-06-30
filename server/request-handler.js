@@ -21,14 +21,20 @@ exports.requestHandler = function(request, response) {
     "access-control-allow-origin": "*",
     "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
     "access-control-allow-headers": "content-type, accept",
-    "access-control-max-age": 10, // Seconds.
-    "Content-Type": "application/json"
+    "access-control-max-age": 10,
   };
 
   var classes = request.url.slice(0,9)
-  if (classes === '/classes/') {
+  // if (classes === '/classes/') {
+
+    if (request.method === 'OPTIONS') {
+      console.log('options!!')
+      response.writeHead(200, headers);
+      response.end();
+    }
     if (request.method === 'GET') {
-      // console.log("Serving request type " + request.method + " for url " + request.url);
+      console.log("Serving request type " + request.method + " for url " + request.url);
+      headers['content-type'] = 'application/json';
       var statusCode = 200;
       var message = {
         'results': results
@@ -37,6 +43,7 @@ exports.requestHandler = function(request, response) {
       message = JSON.stringify(message);
       response.writeHead(statusCode, headers);
       response.end(message);
+      console.log("GET MADE")
     }
 
     if (request.method === 'POST') {
@@ -53,16 +60,15 @@ exports.requestHandler = function(request, response) {
         response.writeHead(statusCode, headers);
         response.end();
       });  
+      console.log("POST MADE")
     }
 
-    if (request.method === 'OPTIONS') {
-      console.log('options!!')
-    }
-  } else {
-    var statusCode = 404
-    response.writeHead(statusCode, headers);
-    response.end();
-  }
+   
+  // } else {
+  //   var statusCode = 404
+  //   response.writeHead(statusCode, headers);
+  //   response.end();
+  // }
 };
 
 

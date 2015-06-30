@@ -28,10 +28,10 @@ $(function() {
 
       // Fetch previous messages
       app.startSpinner();
-      app.fetch(false);
+      app.fetch(true);
 
       // Poll for new messages
-      setInterval(app.fetch, 3000);
+      setInterval(app.fetch, 6000);
     },
     send: function(data) {
       app.startSpinner();
@@ -51,6 +51,7 @@ $(function() {
         },
         error: function (data) {
           console.error('chatterbox: Failed to send message');
+          app.fetch();
         }
       });
     },
@@ -59,7 +60,6 @@ $(function() {
         url: app.server,
         type: 'GET',
         contentType: 'application/json',
-        data: { order: '-createdAt'},
         success: function(data) {
           console.log('chatterbox: Messages fetched');
 
