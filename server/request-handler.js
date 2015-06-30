@@ -21,71 +21,48 @@ exports.requestHandler = function(request, response) {
     "access-control-allow-origin": "*",
     "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
     "access-control-allow-headers": "content-type, accept",
-    "access-control-max-age": 10 // Seconds.
+    "access-control-max-age": 10, // Seconds.
+    "Content-Type": "application/json"
   };
 
-  // if (request.url === '/classes/room1' || request.url === '/classes/messages') {
+  var classes = request.url.slice(0,9)
+  if (classes === '/classes/') {
     if (request.method === 'GET') {
       // console.log("Serving request type " + request.method + " for url " + request.url);
-
       var statusCode = 200;
-
       var message = {
         'results': results
       };
 
-      // var message = JSON.parse(response._data).results;
-      // var msg = message[0];
-      // console.log("msg", msg);
-      // console.log("Response", message[0])
-      headers['Content-Type'] = "text/json";
-
-      response.on('data', function(chunks) {
-        console.log(chunks)
-      });
-
-      response.on('end', function(chunk) {
-        console.log("test", chunk);
-      });  
-      
-      
+      message = JSON.stringify(message);
       response.writeHead(statusCode, headers);
-      // response.end(response._data);
       response.end(message);
-      // cb = function(response) {
-      //   response.on('data', function(chunk) {
-      //     str+= chunk;
-      //   });
-      //   response.on('end', function() {
-      //     console.log(req.data);
-      //     console.log(str);
-      //   })
-      // }
-      // var req = http.request(options,cb).end();
     }
 
     if (request.method === 'POST') {
       var statusCode = 201;
-      console.log(request)
-      results.push(request)
+      var body = "";
 
-      // console.log(request._postData)
-      // results.push(request._postData)
+      request.on('data', function(chunks) {
+        body += chunks;
+      });
 
-      headers['Content-Type'] = "text/json";
-
-      response.writeHead(statusCode, headers);
-      response.end("Data received")
+      request.on('end', function() {
+        body = JSON.parse(body)
+        results.push(body);
+        response.writeHead(statusCode, headers);
+        response.end();
+      });  
     }
 
     if (request.method === 'OPTIONS') {
       console.log('options!!')
     }
-  // } else {
-  //   var statusCode = 404
-  //   response.writeHead(statusCode, headers);
-  //   response.end();
-  // }
+  } else {
+    var statusCode = 404
+    response.writeHead(statusCode, headers);
+    response.end();
+  }
 };
 
 
