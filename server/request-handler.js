@@ -13,52 +13,79 @@ this file and include it in basic-server.js so that it actually works.
 **************************************************************/
 
 var results = [];
+var http = require('http');
 
 exports.requestHandler = function(request, response) {
-  if (request.method === 'GET') {
-    console.log("Serving request type " + request.method + " for url " + request.url);
+  
+  var headers = {
+    "access-control-allow-origin": "*",
+    "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "access-control-allow-headers": "content-type, accept",
+    "access-control-max-age": 10 // Seconds.
+  };
 
-    var statusCode = 200;
+  // if (request.url === '/classes/room1' || request.url === '/classes/messages') {
+    if (request.method === 'GET') {
+      // console.log("Serving request type " + request.method + " for url " + request.url);
 
-    var headers = defaultCorsHeaders;
-    var data = {
-      'results': results
-    };
+      var statusCode = 200;
 
-    headers['Content-Type'] = "text/json";
+      var message = {
+        'results': results
+      };
 
-    response.writeHead(statusCode, headers);
-    response.end(JSON.stringify(data));
-  }
+      // var message = JSON.parse(response._data).results;
+      // var msg = message[0];
+      // console.log("msg", msg);
+      // console.log("Response", message[0])
+      headers['Content-Type'] = "text/json";
 
-  if (request.method === 'POST') {
-    var statusCode = 201;
-    var headers = defaultCorsHeaders;
+      response.on('data', function(chunks) {
+        console.log(chunks)
+      });
 
-    headers['Content-Type'] = "text/json";
+      response.on('end', function(chunk) {
+        console.log("test", chunk);
+      });  
+      
+      
+      response.writeHead(statusCode, headers);
+      // response.end(response._data);
+      response.end(message);
+      // cb = function(response) {
+      //   response.on('data', function(chunk) {
+      //     str+= chunk;
+      //   });
+      //   response.on('end', function() {
+      //     console.log(req.data);
+      //     console.log(str);
+      //   })
+      // }
+      // var req = http.request(options,cb).end();
+    }
 
-    response.writeHead(statusCode, headers);
-    response.end("what")
-  }
+    if (request.method === 'POST') {
+      var statusCode = 201;
+      console.log(request)
+      results.push(request)
 
-  if (request.method === 'OPTIONS') {
-    console.log('options!!')
-  }
+      // console.log(request._postData)
+      // results.push(request._postData)
+
+      headers['Content-Type'] = "text/json";
+
+      response.writeHead(statusCode, headers);
+      response.end("Data received")
+    }
+
+    if (request.method === 'OPTIONS') {
+      console.log('options!!')
+    }
+  // } else {
+  //   var statusCode = 404
+  //   response.writeHead(statusCode, headers);
+  //   response.end();
+  // }
 };
 
-// These headers will allow Cross-Origin Resource Sharing (CORS).
-// This code allows this server to talk to websites that
-// are on different domains, for instance, your chat client.
-//
-// Your chat client is running from a url like file://your/chat/client/index.html,
-// which is considered a different domain.
-//
-// Another way to get around this restriction is to serve you chat
-// client from this domain by setting up static file serving.
-var defaultCorsHeaders = {
-  "access-control-allow-origin": "*",
-  "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "access-control-allow-headers": "content-type, accept",
-  "access-control-max-age": 10 // Seconds.
-};
 
