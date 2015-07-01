@@ -12,63 +12,58 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 
-var results = [];
+var messages = [];
 var http = require('http');
+var express = require('express');
+var url = require('url');
+
+var sendResponse = function(response, data, statusCode) {
+  statusCode = statusCode || 200;
+  response.writeHead(statusCode, headers);
+  response.end(JSON.stringify(data));
+}
+
+var dataCollector = function(request, callback) {
+  var body = "";
+  request.on('data', function(chunks) {
+    body += chunks;
+  });
+  request.on('end', function() {
+    callback(JSON.parse(body));
+  })
+}
+
+var methods = {
+  GET: function(request, response, statusCode) {
+    sendResponse(response, {results: messages});
+  },
+
+  POST: function(request, response, statusCode) {
+    dataCollector(request, function(data) {
+      messages.push(data);
+    });
+    sendResponse(response, messages, 201);
+  },
+
+  OPTIONS: function(request, response, statusCode) {
+    sendResponse(response, null);
+  }
+}
 
 exports.requestHandler = function(request, response) {
-  
-  var headers = {
-    "access-control-allow-origin": "*",
-    "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "access-control-allow-headers": "content-type, accept",
-    "access-control-max-age": 10,
-  };
-
-  var classes = request.url.slice(0,9)
-  // if (classes === '/classes/') {
-
-    if (request.method === 'OPTIONS') {
-      console.log('options!!')
-      response.writeHead(200, headers);
-      response.end();
-    }
-    if (request.method === 'GET') {
-      console.log("Serving request type " + request.method + " for url " + request.url);
-      headers['content-type'] = 'application/json';
-      var statusCode = 200;
-      var message = {
-        'results': results
-      };
-
-      message = JSON.stringify(message);
-      response.writeHead(statusCode, headers);
-      response.end(message);
-      console.log("GET MADE")
-    }
-
-    if (request.method === 'POST') {
-      var statusCode = 201;
-      var body = "";
-
-      request.on('data', function(chunks) {
-        body += chunks;
-      });
-
-      request.on('end', function() {
-        body = JSON.parse(body)
-        results.push(body);
-        response.writeHead(statusCode, headers);
-        response.end();
-      });  
-      console.log("POST MADE")
-    }
-
-   
-  // } else {
-  //   var statusCode = 404
-  //   response.writeHead(statusCode, headers);
-  //   response.end();
-  // }
+  headers['content-type'] = 'application/json';
+  var action = methods[request.method];
+  if (action) {
+    action(request, response);
+  } else {
+    sendResponse(response, "Not Found", 404)
+  }
 };
 
+var headers = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "access-control-allow-headers": "content-type, accept",
+  "access-control-max-age": 10,
+};
 
